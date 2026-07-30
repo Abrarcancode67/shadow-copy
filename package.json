@@ -1,0 +1,12 @@
+{
+  "name": "shadow-copy",
+  "version": "1.0.0",
+  "description": "A minimalist neon browser game where you must survive your own past movements.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["game", "canvas", "javascript", "browser-game"],
+  "license": "MIT",
+  "private": true
+}

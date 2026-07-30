@@ -1,3 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Shadow Copy</title>
+<style>
+:root{
+    --bg:#05050c;
+    --blue:#3fd0ff;
+    --blue-glow: rgba(63,208,255,0.55);
+    --purple:#b16bff;
+    --purple-glow: rgba(177,107,255,0.5);
+    --pink:#ff5fa2;
+    --green:#4dffb0;
+    --gold:#ffd76b;
+    --text:#eaf6ff;
+    --muted:#7c8aa5;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{
+    margin:0; padding:0; height:100vh; width:100%;
+    height:100dvh;
+    background: radial-gradient(1200px 800px at 50% 20%, #0d0e1c 0%, #05050c 60%, #030308 100%);
+    color:var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow:hidden;
+    touch-action:none;
+    user-select:none;
+  }
+  #app{ position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:8px; }
+  #gameShell{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+    width:min(97vw, 1100px);
+  }
+  #hudBar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background: rgba(6,6,16,0.7);
+    border:1px solid rgba(120,150,255,0.18);
+    border-radius:10px;
+    padding:8px 12px;
+  }
+  #gameWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4/3;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow: 0 0 0 1px rgba(120,150,255,0.15), 0 0 60px rgba(70,50,180,0.25), inset 0 0 80px rgba(60,30,120,0.15);
+    background:#050510;
+  }
+  canvas{ display:block; width:100%; height:100%; background:transparent; }
+
+  .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px;
+    background: rgba(3,3,10,0.85);
+    backdrop-filter: blur(6px);
+    text-align:center;
+    padding:24px;
+    z-index:20;
+    animation: fadeIn 0.35s ease;
+  }
+  .hidden{ display:none !important; }
+  @keyframes fadeIn{ from{opacity:0; transform:scale(0.98);} to{opacity:1; transform:scale(1);} }
+
+  .title{
+    font-size: clamp(26px, 5.5vw, 44px);
+    font-weight:800; letter-spacing:3px;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin:0;
+  }
+  .subtitle{ color:var(--muted); font-size: clamp(11px, 2.2vw, 14px); letter-spacing:2px; text-transform:uppercase; margin-top:-8px; }
+
+  .btn{
+    appearance:none; border:1px solid rgba(120,170,255,0.35);
+    background: linear-gradient(180deg, rgba(63,208,255,0.14), rgba(177,107,255,0.08));
+    color:var(--text); padding:12px 34px; border-radius:10px;
+    font-size:15px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;
+    cursor:pointer; transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    min-width:200px;
+  }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 6px 24px var(--blue-glow); background: linear-gradient(180deg, rgba(63,208,255,0.28), rgba(177,107,255,0.16)); }
+  .btn:active{ transform: translateY(0px) scale(0.98); }
+  .btn.secondary{ border-color: rgba(177,107,255,0.35); background: linear-gradient(180deg, rgba(177,107,255,0.12), rgba(63,208,255,0.05)); }
+  .btn.ghost{ background:transparent; border-color: rgba(120,140,180,0.25); color:var(--muted); min-width:auto; padding:8px 18px; font-size:12px; }
+
+  .menuStack{ display:flex; flex-direction:column; gap:12px; margin-top:6px; }
+
+  .rowline{
+    display:flex; align-items:center; justify-content:space-between;
+    width:min(80vw, 320px); color:var(--muted); font-size:13px; letter-spacing:1px;
+    padding:10px 14px; border:1px solid rgba(120,140,180,0.18); border-radius:10px; background: rgba(255,255,255,0.02);
+  }
+  .toggle{ width:44px; height:24px; border-radius:20px; background: rgba(120,140,180,0.25); position:relative; cursor:pointer; transition: background 0.2s ease; flex-shrink:0; }
+  .toggle.on{ background: linear-gradient(90deg, var(--blue), var(--purple)); }
+  .toggle::after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition: left 0.2s ease; }
+  .toggle.on::after{ left:22px; }
+
+  .scoreList{ display:flex; flex-direction:column; gap:6px; width:min(80vw, 300px); max-height:220px; overflow-y:auto; }
+  .scoreRow{ display:flex; justify-content:space-between; padding:8px 14px; border-radius:8px; background: rgba(255,255,255,0.03); border:1px solid rgba(120,140,180,0.12); font-size:14px; }
+  .scoreRow span:first-child{ color:var(--muted); }
+  .scoreRow span:last-child{ color:var(--blue); font-weight:700; }
+
+  /* Tutorial */
+  .tutorialSteps{ display:flex; flex-direction:column; gap:10px; max-width:340px; }
+  .tutorialStep{ display:flex; align-items:center; gap:12px; text-align:left; font-size:14px; color:var(--text); background: rgba(255,255,255,0.03); border:1px solid rgba(120,140,180,0.15); border-radius:10px; padding:10px 14px; }
+  .tutorialStep .ico{ font-size:22px; flex-shrink:0; width:28px; text-align:center; }
+
+  /* Game over stat grid */
+  .statGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; width:min(84vw, 340px); margin-top:4px; }
+  .statCard{ background: rgba(255,255,255,0.03); border:1px solid rgba(120,140,180,0.15); border-radius:12px; padding:12px 8px; }
+  .statCard .ico{ font-size:18px; }
+  .statCard .val{ font-size: clamp(18px,4vw,24px); font-weight:800; color:var(--blue); margin-top:2px; }
+  .statCard .lbl{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-top:2px; }
+  .newBest{ color:var(--gold); font-size:13px; letter-spacing:2px; text-transform:uppercase; animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{opacity:0.6;} 50%{opacity:1;} }
+
+  /* HUD (now a normal top bar above the game, not overlaid on it) */
+  .hudGroup{ display:flex; gap:12px; }
+  .hudItem{ background: rgba(6,6,16,0.55); border:1px solid rgba(120,150,255,0.18); border-radius:8px; padding:5px 10px; letter-spacing:1px; min-width:52px; text-align:center; font-size: clamp(9px,1.8vw,12px); }
+  .hudItem b{ display:block; font-size: clamp(12px, 2.2vw, 17px); color:var(--blue); }
+  .hudItem.purple b{ color:var(--purple); }
+  #pauseBtn{ pointer-events:all; background: rgba(6,6,16,0.6); border:1px solid rgba(120,150,255,0.25); color:var(--text); width:34px; height:34px; border-radius:8px; font-size:14px; cursor:pointer; flex-shrink:0; }
+
+  .powerupHud{ display:flex; gap:6px; flex-wrap:wrap; }
+  .powerupChip{
+    display:flex; align-items:center; gap:5px;
+    background: rgba(6,6,16,0.6); border:1px solid rgba(120,150,255,0.2);
+    border-radius:20px; padding:4px 10px; font-size:11px; color:var(--text);
+  }
+
+  /* Touch controls — now a normal row BELOW the game canvas, not overlapping it */
+  #touchControls{ display:none; justify-content:center; padding:2px 0; }
+  #touchControls.active{ display:flex; }
+  #joyBase{ width:66px; height:66px; border-radius:50%; background: rgba(63,208,255,0.06); border:1px solid rgba(63,208,255,0.3); position:relative; touch-action:none; }
+  #joyStick{ width:28px; height:28px; border-radius:50%; background: linear-gradient(180deg, var(--blue), var(--purple)); box-shadow: 0 0 12px var(--blue-glow); position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+
+  .footNote{ color:var(--muted); font-size:11px; letter-spacing:1px; max-width:340px; }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="gameShell">
+    <div id="hudBar" class="hidden">
+      <div class="hudGroup">
+        <div class="hudItem"><span>TIME</span><b id="hudTime">0</b></div>
+        <div class="hudItem"><span>SCORE</span><b id="hudScore">0</b></div>
+        <div class="hudItem purple"><span>BEST</span><b id="hudBest">0</b></div>
+      </div>
+      <div class="powerupHud" id="powerupHud"></div>
+      <button id="pauseBtn">⏸</button>
+    </div>
+
+    <div id="gameWrap">
+      <canvas id="canvas"></canvas>
+
+      <!-- Main Menu -->
+      <div id="menuScreen" class="overlay">
+        <h1 class="title">SHADOW COPY</h1>
+        <div class="subtitle">you are your own worst enemy</div>
+        <div class="menuStack">
+          <button class="btn" id="playBtn">Play</button>
+          <button class="btn secondary" id="howToBtn">How to Play</button>
+          <button class="btn secondary" id="settingsBtn">Settings</button>
+          <button class="btn secondary" id="scoresBtn">High Scores</button>
+        </div>
+        <div class="footNote">WASD / Arrow Keys to move · avoid your own shadows</div>
+      </div>
+
+      <!-- Tutorial -->
+      <div id="tutorialScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:26px;">HOW TO PLAY</h1>
+        <div class="tutorialSteps">
+          <div class="tutorialStep"><span class="ico">🟡</span><span>Collect gold orbs to score points.</span></div>
+          <div class="tutorialStep"><span class="ico">⚡</span><span>Every 5 seconds, your past movements become a shadow clone.</span></div>
+          <div class="tutorialStep"><span class="ico">👻</span><span>Avoid your shadows and moving obstacles — they never stop coming.</span></div>
+          <div class="tutorialStep"><span class="ico">✨</span><span>Grab power-ups: Shield, Speed Boost, and Coin Magnet.</span></div>
+          <div class="tutorialStep"><span class="ico">🏆</span><span>Survive as long as you can. Good luck.</span></div>
+        </div>
+        <button class="btn" id="tutorialContinueBtn">Got It, Let's Go</button>
+      </div>
+
+      <!-- Settings -->
+      <div id="settingsScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:28px;">SETTINGS</h1>
+        <div class="rowline"><span>Sound</span><div class="toggle on" id="soundToggle"></div></div>
+        <div class="rowline"><span>Screen Shake</span><div class="toggle on" id="shakeToggle"></div></div>
+        <button class="btn ghost" id="settingsBack">Back</button>
+      </div>
+
+      <!-- High Scores -->
+      <div id="scoresScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:28px;">HIGH SCORES</h1>
+        <div class="scoreList" id="scoreList"></div>
+        <button class="btn ghost" id="scoresBack">Back</button>
+      </div>
+
+      <!-- Pause -->
+      <div id="pauseScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:30px;">PAUSED</h1>
+        <div class="menuStack">
+          <button class="btn" id="resumeBtn">Resume</button>
+          <button class="btn secondary" id="quitBtn">Quit to Menu</button>
+        </div>
+      </div>
+
+      <!-- Game Over -->
+      <div id="gameOverScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:28px; color:var(--pink); -webkit-text-fill-color: var(--pink);">GAME OVER</h1>
+        <div id="newBestTag" class="newBest hidden">★ New Best! ★</div>
+        <div class="statGrid">
+          <div class="statCard"><div class="ico">⏱</div><div class="val" id="statTime">0:00</div><div class="lbl">Survived</div></div>
+          <div class="statCard"><div class="ico">👥</div><div class="val" id="statClones">0</div><div class="lbl">Clones Created</div></div>
+          <div class="statCard"><div class="ico">⭐</div><div class="val" id="statScore">0</div><div class="lbl">Score</div></div>
+          <div class="statCard"><div class="ico">🏆</div><div class="val" id="statBest">0</div><div class="lbl">Best</div></div>
+        </div>
+        <div class="menuStack" style="margin-top:10px;">
+          <button class="btn" id="retryBtn">Play Again</button>
+          <button class="btn secondary" id="menuBtn">Main Menu</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="touchControls">
+      <div id="joyBase"><div id="joyStick"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
 (function(){
   "use strict";
 
@@ -5,6 +246,9 @@
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
   const gameWrap = document.getElementById('gameWrap');
+  const gameShell = document.getElementById('gameShell');
+  const hudBar = document.getElementById('hudBar');
+  const touchControlsEl = document.getElementById('touchControls');
 
   // Arena increased ~30% from original 800x600
   const ARENA_W = 1040, ARENA_H = 780;
@@ -13,10 +257,37 @@
     canvas.width = ARENA_W;
     canvas.height = ARENA_H;
   }
-  window.addEventListener('resize', resize);
+
+  // Fits the whole shell (HUD bar + canvas + joystick bar) inside the real
+  // available viewport, so nothing is cut off on desktop or mobile.
+  function layoutGame(){
+    const vw = window.innerWidth;
+    const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    const outerPad = 20;
+    const gapTotal = 16; // gaps between the stacked rows
+
+    const hudH = hudBar.offsetHeight || 0;
+    const touchH = touchControlsEl.classList.contains('active') ? (touchControlsEl.offsetHeight || 0) : 0;
+
+    const availW = Math.max(240, vw - outerPad);
+    const availH = Math.max(200, vh - outerPad - hudH - touchH - gapTotal);
+
+    let w = availW;
+    let h = w * 3/4;
+    if(h > availH){
+      h = availH;
+      w = h * 4/3;
+    }
+    w = Math.min(w, 1100);
+
+    gameShell.style.width = w + 'px';
+  }
+  window.addEventListener('resize', layoutGame);
+  window.addEventListener('orientationchange', layoutGame);
+  if(window.visualViewport){ window.visualViewport.addEventListener('resize', layoutGame); }
 
   const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if(isTouch){ document.getElementById('touchControls').classList.add('active'); }
+  if(isTouch){ document.getElementById('touchControls').classList.add('active'); document.body.classList.add('is-touch'); }
 
   /* ============ State ============ */
   const State = { MENU:'menu', TUTORIAL:'tutorial', SETTINGS:'settings', SCORES:'scores', PLAYING:'playing', PAUSED:'paused', OVER:'over' };
@@ -98,7 +369,7 @@
     { fill:'rgba(177,140,255,0.65)', stroke:'rgba(210,190,255,0.6)', glow:'177,140,255' }, // purple
     { fill:'rgba(120,220,255,0.65)', stroke:'rgba(180,235,255,0.6)', glow:'120,220,255' }, // cyan
     { fill:'rgba(180,255,180,0.6)',  stroke:'rgba(210,255,210,0.55)', glow:'180,255,180' }, // mint
-    { fill:'rgba(255,220,140,0.65)', stroke:'rgba(255,235,180,0.6)', glow:'255,220,140' }, // amber
+    { fill:'rgba(150,165,255,0.65)', stroke:'rgba(195,205,255,0.6)', glow:'150,165,255' }, // periwinkle
     { fill:'rgba(255,150,220,0.6)',  stroke:'rgba(255,200,235,0.55)', glow:'255,150,220' }  // pink
   ];
 
@@ -233,7 +504,7 @@
     pause: document.getElementById('pauseScreen'),
     over: document.getElementById('gameOverScreen'),
   };
-  const hud = document.getElementById('hud');
+  const hud = document.getElementById('hudBar');
 
   function showOnly(name){
     Object.values(screens).forEach(s=>s.classList.add('hidden'));
@@ -245,6 +516,7 @@
     showOnly('menu');
     hud.classList.add('hidden');
     if(animFrameId) cancelAnimationFrame(animFrameId);
+    requestAnimationFrame(layoutGame);
   }
 
   function beginPlayFlow(){
@@ -264,6 +536,7 @@
     showOnly(null);
     hud.classList.remove('hidden');
     document.getElementById('hudBest').textContent = getBest();
+    requestAnimationFrame(layoutGame);
     if(animFrameId) cancelAnimationFrame(animFrameId);
     animFrameId = requestAnimationFrame(loop);
   }
@@ -309,7 +582,6 @@
   document.getElementById('retryBtn').onclick = startGame;
   document.getElementById('menuBtn').onclick = goMenu;
   document.getElementById('pauseBtn').onclick = togglePause;
-  document.getElementById('pauseBtnMobile').onclick = togglePause;
 
   let tutorialFromMenu = false;
   document.getElementById('tutorialContinueBtn').onclick = ()=>{
@@ -543,18 +815,18 @@
     ctx.lineWidth = 1.5;
     for(const w of walls){ ctx.fillRect(w.x,w.y,w.w,w.h); ctx.strokeRect(w.x,w.y,w.w,w.h); }
 
-    // coins
+    // coins — gold, so they read as distinct from the blue player
     for(const c of coins){
       ctx.save();
       ctx.translate(c.x,c.y);
       ctx.rotate(now/300 + c.spin);
       const grad = ctx.createRadialGradient(0,0,0,0,0,c.r*2.2);
       grad.addColorStop(0,'rgba(255,255,255,0.9)');
-      grad.addColorStop(0.4,'rgba(63,208,255,0.9)');
-      grad.addColorStop(1,'rgba(63,208,255,0)');
+      grad.addColorStop(0.4,'rgba(255,208,90,0.9)');
+      grad.addColorStop(1,'rgba(255,208,90,0)');
       ctx.fillStyle = grad;
       ctx.beginPath(); ctx.arc(0,0,c.r*2.2,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#eaffff';
+      ctx.fillStyle = '#fff6df';
       ctx.beginPath(); ctx.arc(0,0,c.r*0.55,0,Math.PI*2); ctx.fill();
       ctx.restore();
     }
@@ -770,5 +1042,10 @@
 
   /* ============ Init ============ */
   resize();
+  layoutGame();
   goMenu();
 })();
+
+</script>
+</body>
+</html>

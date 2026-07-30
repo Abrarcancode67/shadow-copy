@@ -4,101 +4,98 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Shadow Copy</title>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 <div id="app">
-  <div id="gameWrap">
-    <canvas id="canvas"></canvas>
+  <div id="gameShell">
+    <div id="hudBar" class="hidden">
+      <div class="hudGroup">
+        <div class="hudItem"><span>TIME</span><b id="hudTime">0</b></div>
+        <div class="hudItem"><span>SCORE</span><b id="hudScore">0</b></div>
+        <div class="hudItem purple"><span>BEST</span><b id="hudBest">0</b></div>
+      </div>
+      <div class="powerupHud" id="powerupHud"></div>
+      <button id="pauseBtn">⏸</button>
+    </div>
 
-    <div id="hud" class="hidden">
-      <div class="hudTopRow">
-        <div class="hudGroup">
-          <div class="hudItem"><span>TIME</span><b id="hudTime">0</b></div>
-          <div class="hudItem"><span>SCORE</span><b id="hudScore">0</b></div>
-          <div class="hudItem purple"><span>BEST</span><b id="hudBest">0</b></div>
+    <div id="gameWrap">
+      <canvas id="canvas"></canvas>
+
+      <!-- Main Menu -->
+      <div id="menuScreen" class="overlay">
+        <h1 class="title">SHADOW COPY</h1>
+        <div class="subtitle">you are your own worst enemy</div>
+        <div class="menuStack">
+          <button class="btn" id="playBtn">Play</button>
+          <button class="btn secondary" id="howToBtn">How to Play</button>
+          <button class="btn secondary" id="settingsBtn">Settings</button>
+          <button class="btn secondary" id="scoresBtn">High Scores</button>
         </div>
-        <button id="pauseBtn">⏸</button>
+        <div class="footNote">WASD / Arrow Keys to move · avoid your own shadows</div>
       </div>
-      <div class="hudTopRow" style="align-items:flex-end;">
-        <div class="powerupHud" id="powerupHud"></div>
+
+      <!-- Tutorial -->
+      <div id="tutorialScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:26px;">HOW TO PLAY</h1>
+        <div class="tutorialSteps">
+          <div class="tutorialStep"><span class="ico">🟡</span><span>Collect gold orbs to score points.</span></div>
+          <div class="tutorialStep"><span class="ico">⚡</span><span>Every 5 seconds, your past movements become a shadow clone.</span></div>
+          <div class="tutorialStep"><span class="ico">👻</span><span>Avoid your shadows and moving obstacles — they never stop coming.</span></div>
+          <div class="tutorialStep"><span class="ico">✨</span><span>Grab power-ups: Shield, Speed Boost, and Coin Magnet.</span></div>
+          <div class="tutorialStep"><span class="ico">🏆</span><span>Survive as long as you can. Good luck.</span></div>
+        </div>
+        <button class="btn" id="tutorialContinueBtn">Got It, Let's Go</button>
       </div>
+
+      <!-- Settings -->
+      <div id="settingsScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:28px;">SETTINGS</h1>
+        <div class="rowline"><span>Sound</span><div class="toggle on" id="soundToggle"></div></div>
+        <div class="rowline"><span>Screen Shake</span><div class="toggle on" id="shakeToggle"></div></div>
+        <button class="btn ghost" id="settingsBack">Back</button>
+      </div>
+
+      <!-- High Scores -->
+      <div id="scoresScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:28px;">HIGH SCORES</h1>
+        <div class="scoreList" id="scoreList"></div>
+        <button class="btn ghost" id="scoresBack">Back</button>
+      </div>
+
+      <!-- Pause -->
+      <div id="pauseScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:30px;">PAUSED</h1>
+        <div class="menuStack">
+          <button class="btn" id="resumeBtn">Resume</button>
+          <button class="btn secondary" id="quitBtn">Quit to Menu</button>
+        </div>
+      </div>
+
+      <!-- Game Over -->
+      <div id="gameOverScreen" class="overlay hidden">
+        <h1 class="title" style="font-size:28px; color:var(--pink); -webkit-text-fill-color: var(--pink);">GAME OVER</h1>
+        <div id="newBestTag" class="newBest hidden">★ New Best! ★</div>
+        <div class="statGrid">
+          <div class="statCard"><div class="ico">⏱</div><div class="val" id="statTime">0:00</div><div class="lbl">Survived</div></div>
+          <div class="statCard"><div class="ico">👥</div><div class="val" id="statClones">0</div><div class="lbl">Clones Created</div></div>
+          <div class="statCard"><div class="ico">⭐</div><div class="val" id="statScore">0</div><div class="lbl">Score</div></div>
+          <div class="statCard"><div class="ico">🏆</div><div class="val" id="statBest">0</div><div class="lbl">Best</div></div>
+        </div>
+        <div class="menuStack" style="margin-top:10px;">
+          <button class="btn" id="retryBtn">Play Again</button>
+          <button class="btn secondary" id="menuBtn">Main Menu</button>
+        </div>
+      </div>
+
     </div>
 
     <div id="touchControls">
       <div id="joyBase"><div id="joyStick"></div></div>
-      <button id="pauseBtnMobile">⏸</button>
     </div>
-
-    <!-- Main Menu -->
-    <div id="menuScreen" class="overlay">
-      <h1 class="title">SHADOW COPY</h1>
-      <div class="subtitle">you are your own worst enemy</div>
-      <div class="menuStack">
-        <button class="btn" id="playBtn">Play</button>
-        <button class="btn secondary" id="howToBtn">How to Play</button>
-        <button class="btn secondary" id="settingsBtn">Settings</button>
-        <button class="btn secondary" id="scoresBtn">High Scores</button>
-      </div>
-      <div class="footNote">WASD / Arrow Keys to move · avoid your own shadows</div>
-    </div>
-
-    <!-- Tutorial -->
-    <div id="tutorialScreen" class="overlay hidden">
-      <h1 class="title" style="font-size:26px;">HOW TO PLAY</h1>
-      <div class="tutorialSteps">
-        <div class="tutorialStep"><span class="ico">🔵</span><span>Collect blue orbs to score points.</span></div>
-        <div class="tutorialStep"><span class="ico">⚡</span><span>Every 5 seconds, your past movements become a shadow clone.</span></div>
-        <div class="tutorialStep"><span class="ico">👻</span><span>Avoid your shadows and moving obstacles — they never stop coming.</span></div>
-        <div class="tutorialStep"><span class="ico">✨</span><span>Grab power-ups: Shield, Speed Boost, and Coin Magnet.</span></div>
-        <div class="tutorialStep"><span class="ico">🏆</span><span>Survive as long as you can. Good luck.</span></div>
-      </div>
-      <button class="btn" id="tutorialContinueBtn">Got It, Let's Go</button>
-    </div>
-
-    <!-- Settings -->
-    <div id="settingsScreen" class="overlay hidden">
-      <h1 class="title" style="font-size:28px;">SETTINGS</h1>
-      <div class="rowline"><span>Sound</span><div class="toggle on" id="soundToggle"></div></div>
-      <div class="rowline"><span>Screen Shake</span><div class="toggle on" id="shakeToggle"></div></div>
-      <button class="btn ghost" id="settingsBack">Back</button>
-    </div>
-
-    <!-- High Scores -->
-    <div id="scoresScreen" class="overlay hidden">
-      <h1 class="title" style="font-size:28px;">HIGH SCORES</h1>
-      <div class="scoreList" id="scoreList"></div>
-      <button class="btn ghost" id="scoresBack">Back</button>
-    </div>
-
-    <!-- Pause -->
-    <div id="pauseScreen" class="overlay hidden">
-      <h1 class="title" style="font-size:30px;">PAUSED</h1>
-      <div class="menuStack">
-        <button class="btn" id="resumeBtn">Resume</button>
-        <button class="btn secondary" id="quitBtn">Quit to Menu</button>
-      </div>
-    </div>
-
-    <!-- Game Over -->
-    <div id="gameOverScreen" class="overlay hidden">
-      <h1 class="title" style="font-size:28px; color:var(--pink); -webkit-text-fill-color: var(--pink);">GAME OVER</h1>
-      <div id="newBestTag" class="newBest hidden">★ New Best! ★</div>
-      <div class="statGrid">
-        <div class="statCard"><div class="ico">⏱</div><div class="val" id="statTime">0:00</div><div class="lbl">Survived</div></div>
-        <div class="statCard"><div class="ico">👥</div><div class="val" id="statClones">0</div><div class="lbl">Clones Created</div></div>
-        <div class="statCard"><div class="ico">⭐</div><div class="val" id="statScore">0</div><div class="lbl">Score</div></div>
-        <div class="statCard"><div class="ico">🏆</div><div class="val" id="statBest">0</div><div class="lbl">Best</div></div>
-      </div>
-      <div class="menuStack" style="margin-top:10px;">
-        <button class="btn" id="retryBtn">Play Again</button>
-        <button class="btn secondary" id="menuBtn">Main Menu</button>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<script src="script.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>
