@@ -21,7 +21,7 @@ html,body{
   touch-action:none;
   user-select:none;
 }
-#app{ position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:8px; }
+#app{ position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:4px; }
 #gameShell{
   display:flex;
   flex-direction:column;
@@ -139,27 +139,70 @@ canvas{ display:block; width:100%; height:100%; background:transparent; }
 
 .footNote{ color:var(--muted); font-size:11px; letter-spacing:1px; max-width:340px; }
 
-/* --- MOBILE RESPONSIVE FIX (Fits entire game shell onto smaller screen height) --- */
+/* --- MOBILE RESPONSIVE FIX (Larger Game Display + Clean Game Over Layout) --- */
 @media screen and (max-width: 600px) and (orientation: portrait) {
   #gameShell {
-    max-height: 82dvh;
-    max-width: 90vw;
+    width: 98vw;
+    max-width: 98vw;
     margin: auto;
   }
   
   #gameWrap {
-    max-height: calc(82dvh - 120px);
-    width: auto;
+    width: 100%;
+    max-height: none;
     margin: 0 auto;
   }
 
   .overlay {
-    padding: 12px;
-    gap: 10px;
+    padding: 8px 12px;
+    gap: 6px;
+    justify-content: center;
   }
 
-  .tutorialSteps, .scoreList, .statGrid {
-    max-height: 50vh;
+  .title {
+    font-size: 22px;
+    letter-spacing: 2px;
+  }
+
+  .statGrid {
+    gap: 6px;
+    width: 92%;
+    margin-top: 0;
+  }
+
+  .statCard {
+    padding: 6px 4px;
+    border-radius: 8px;
+  }
+
+  .statCard .ico {
+    font-size: 14px;
+  }
+
+  .statCard .val {
+    font-size: 16px;
+    margin-top: 0;
+  }
+
+  .statCard .lbl {
+    font-size: 8px;
+    letter-spacing: 1px;
+    margin-top: 0;
+  }
+
+  .menuStack {
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .btn {
+    padding: 8px 20px;
+    font-size: 12px;
+    min-width: 160px;
+  }
+
+  .tutorialSteps, .scoreList {
+    max-height: 45vh;
     overflow-y: auto;
   }
 }
